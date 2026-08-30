@@ -1,0 +1,20 @@
+echo "Running pre-push checks..."
+
+# 1. ESLint
+echo "Linting..."
+pnpm run lint
+if [ $? -ne 0 ]; then
+  echo "Lint errors detected. Fix them before pushing."
+  exit 1
+fi
+
+# 2. Prettier format check
+echo "Checking code format..."
+pnpm run prettier:check
+if [ $? -ne 0 ]; then
+  echo "Prettier formatting errors found. Run 'pnpm run prettier:format'."
+  exit 1
+fi
+
+echo "All pre-push checks passed!"
+exit 0
