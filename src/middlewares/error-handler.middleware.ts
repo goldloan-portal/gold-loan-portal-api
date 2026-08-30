@@ -1,6 +1,7 @@
 import type { NextFunction, Request, Response } from 'express';
 
 import { AppError } from '../lib/app-error';
+import { ValidationError } from '../lib/errors/validation.error';
 import { Prisma } from '../prisma/generated/client';
 
 const PRISMA_ERROR_STATUS_CODES: Record<string, number> = {
@@ -16,6 +17,17 @@ export function errorHandler(
   _next: NextFunction,
 ): void {
   console.error(err);
+
+  if (err instanceof ValidationError) {
+    res.status(err.statusCode).json({
+      error: {
+        code: err.name,
+        message: err.message,
+        details: err.fieldErrors,
+      },
+    });
+    return;
+  }
 
   if (err instanceof AppError) {
     res
