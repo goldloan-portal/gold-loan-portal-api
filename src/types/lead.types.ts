@@ -1,4 +1,9 @@
-import type { GoldPurity } from '../prisma/generated/enums';
+import type { Prisma } from '../prisma/generated/client';
+import type { GoldPurity, LeadStatus } from '../prisma/generated/enums';
+
+export type LeadWithPlan = Prisma.LeadGetPayload<{
+  include: { selectedPlan: true };
+}>;
 
 export type CreateLeadRecord = {
   customerName: string;
@@ -13,4 +18,15 @@ export type CreateLeadRecord = {
 
 export type CreateLeadResponse = {
   applicationId: string;
+};
+
+export type LeadResponse = {
+  id: string;
+  customerName: string;
+  mobileNumber: string;
+  netWeightGrams: number;
+  status: LeadStatus;
+  maxEligibleLoan: number;
+  plan: { id: string; name: string };
+  createdAt: Date;
 };

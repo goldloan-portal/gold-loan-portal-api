@@ -25,3 +25,7 @@ export function calculateMaxEligibleLoan(
   const goldValue = pureGoldWeight * goldRatePerGram;
   return goldValue * maxLtvRatio;
 }
+
+export function maskMobileNumber(mobileNumber: string): string {
+  return `${mobileNumber.slice(0, 4)}XXXX${mobileNumber.slice(-2)}`;
+}

@@ -1,8 +1,15 @@
 import { prisma } from '../lib/prisma';
 import type { LeadModel } from '../prisma/generated/models';
-import type { CreateLeadRecord } from '../types/lead.types';
+import type { CreateLeadRecord, LeadWithPlan } from '../types/lead.types';
 
 // READS
+export async function getLeads(): Promise<LeadWithPlan[]> {
+  return prisma.lead.findMany({
+    orderBy: { createdAt: 'desc' },
+    include: { selectedPlan: true },
+  });
+}
+
 export async function getRecentLeadByMobileNumber(
   mobileNumber: string,
   since: Date,

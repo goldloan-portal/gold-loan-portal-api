@@ -5,6 +5,7 @@ import { ValidationError } from '../lib/errors/validation.error';
 import type { LeadModel } from '../prisma/generated/models';
 import * as leadRepository from '../repositories/lead.repository';
 import type { CreateLeadInput } from '../schemas/lead.schema';
+import type { LeadWithPlan } from '../types/lead.types';
 import {
   calculateMaxEligibleLoan,
   calculatePureGoldWeight,
@@ -13,6 +14,11 @@ import {
 import * as loanSchemeService from './loan-scheme.service';
 
 const DEDUP_WINDOW_DAYS = 7;
+
+// READS
+export async function getLeads(): Promise<LeadWithPlan[]> {
+  return leadRepository.getLeads();
+}
 
 // WRITES
 export async function createLead(input: CreateLeadInput): Promise<LeadModel> {
