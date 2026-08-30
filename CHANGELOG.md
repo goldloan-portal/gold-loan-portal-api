@@ -26,6 +26,7 @@ Each entry references the Jira ticket (`GLA-XXX`) that introduced the change.
 - [GLA-5] Prisma 7 scaffolded (`prisma/schema.prisma`, `prisma.config.ts`, `@prisma/adapter-pg` client singleton at `src/lib/prisma.ts`) — no models yet, no live database connection. `.env.example` documents `DATABASE_URL`/`DATABASE_SESSION_POOLER_URL` (Supabase transaction/session poolers) and `SUPABASE_URL`/`SUPABASE_ANON_KEY`/`SUPABASE_SERVICE_ROLE_KEY`.
 - [GLA-5] Health check moved into the `routes → controllers` layering and re-pathed to `GET /api/v1/health`, returning the `{ data }` response envelope.
 - [GLA-9] `LoanScheme` Prisma model (`id`, `name`, `interestRate`, `maxLtv`, `isActive`, `createdAt`) and its first migration, applied to a live Supabase Postgres project. Seed script (`src/prisma/seed.ts`, `pnpm run prisma:seed`) seeds two plans — Bullet Repayment Plan and Monthly EMI Plan — idempotently via `upsert` keyed on `name`.
+- [GLA-8] `GET /api/v1/loan-schemes` — repository/service/controller/route layering returning active `LoanScheme` rows as `{ id, name, interestRate, maxLtv }` (Decimal fields converted to numbers). First real route beyond health, so it also introduces the app's error-handling middleware: an `AppError` base class and `src/middlewares/error-handler.middleware.ts` mapping known Prisma error codes (`P2002`/`P2025`/`P2003`) to the `{ error: { code, message } }` envelope.
 
 ### Changed
 
