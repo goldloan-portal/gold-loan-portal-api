@@ -30,3 +30,8 @@ export type LeadResponse = {
   plan: { id: string; name: string };
   createdAt: Date;
 };
+
+export type CalculateLeadResponse = {
+  pureGoldWeight: number;
+  maxEligibleLoan: number;
+};

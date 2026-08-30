@@ -1,8 +1,12 @@
 import { Router } from 'express';
 
-import { createLead, getLeads } from '../controllers/lead.controller';
+import {
+  calculateLead,
+  createLead,
+  getLeads,
+} from '../controllers/lead.controller';
 import { validate } from '../middlewares/validate.middleware';
-import { createLeadSchema } from '../schemas/lead.schema';
+import { calculateLeadSchema, createLeadSchema } from '../schemas/lead.schema';
 
 const router: Router = Router();
 
@@ -10,6 +14,7 @@ const router: Router = Router();
 router.get('/', getLeads);
 
 // WRITES
+router.post('/calculate', validate(calculateLeadSchema), calculateLead);
 router.post('/submit', validate(createLeadSchema), createLead);
 
 export default router;
