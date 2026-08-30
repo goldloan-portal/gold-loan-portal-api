@@ -1,13 +1,18 @@
 {
   "name": "gold-loan-portal-api",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "",
   "main": "dist/index.js",
+  "packageManager": "pnpm@10.33.0",
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --fix",
+    "prettier:check": "prettier --check \"**/*.{js,ts,json,md}\"",
+    "prettier:format": "prettier --write \"**/*.{js,ts,json,md}\"",
+    "prepare": "husky"
   },
   "keywords": [],
   "author": "",
@@ -19,10 +24,28 @@
     "express": "^5.2.1"
   },
   "devDependencies": {
+    "@eslint/js": "^9.18.0",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/node": "^26.4.0",
+    "eslint": "^9.18.0",
+    "eslint-config-prettier": "^10.0.1",
+    "eslint-plugin-prettier": "^5.2.2",
+    "globals": "^16.0.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
+    "prettier": "^3.7.4",
+    "prettier-plugin-organize-imports": "^4.3.0",
     "tsx": "^4.23.13",
-    "typescript": "^7.0.2"
+    "typescript": "~6.0.2",
+    "typescript-eslint": "^8.20.0"
+  },
+  "lint-staged": {
+    "**/*.{js,ts,json,md}": [
+      "prettier --write"
+    ],
+    "**/*.{js,ts}": [
+      "eslint --fix"
+    ]
   }
 }

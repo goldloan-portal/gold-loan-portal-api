@@ -1,0 +1,41 @@
+message="$(cat "$1")"
+branch_name="$(git symbolic-ref --short HEAD)"
+
+allowedTypes="chore|refactor|docs|style|test|build|revert|feat|fix|ci|perf"
+
+# Integration / release branches (main, dev): only enforce a conventional type
+# prefix. The per-branch ticket-ID discipline does not apply here — these
+# branches receive squash-merged work from feature branches and direct release
+# commits (e.g. `chore: release v1.0.0` from `pnpm version`).
+if [ "$branch_name" = "main" ] || [ "$branch_name" = "dev" ]; then
+  if echo "$message" | grep -Eq "^($allowedTypes)(\(.+\))?: .+"; then
+    exit 0
+  fi
+  echo "Invalid commit message on $branch_name. Use a conventional type prefix."
+  echo "Allowed types: $allowedTypes"
+  echo "Example: chore: release v1.0.0"
+  echo "Your message: $message"
+  exit 1
+fi
+
+# Feature / bugfix / hotfix / chore branches: require GLA ticket in both the
+# commit message and the branch name.
+pattern="^($allowedTypes): \\[(GLA-[0-9]+)\\] .+$"
+
+if echo "$message" | grep -Eq "$pattern"; then
+  ticket=$(echo "$message" | sed -nE "s/$pattern/\2/p")
+
+  if ! echo "$branch_name" | grep -q "$ticket"; then
+    echo "Hold up! Your ticket ID '$ticket' isn't in the branch name."
+    echo "Branch: $branch_name"
+    echo "Commit: $message"
+    exit 1
+  fi
+else
+  echo "Invalid commit message format."
+  echo "Expected: <type>: [GLA-123] short description"
+  echo "Allowed types: $allowedTypes"
+  echo "Example: chore: [GLA-2] set up pre-commit hooks"
+  echo "Your message: $message"
+  exit 1
+fi
