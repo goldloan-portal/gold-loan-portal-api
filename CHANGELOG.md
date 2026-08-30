@@ -23,8 +23,13 @@ Each entry references the Jira ticket (`GLA-XXX`) that introduced the change.
 - [GLA-3] `docs/adr/` — Nygard-template ADR scaffolding (`README.md` index + `0000-template.md`).
 - [GLA-4] GitHub Actions CI (`.github/workflows/ci.yaml`): install, lint, prettier check, typecheck, build on every PR into `dev`/`main` and every push to `main`. `changelog-guard.yaml` reuses `scripts/check-changelog-section.sh` to gate PRs into `dev`.
 - [GLA-4] `README.md` with setup instructions, script table, and a CI status badge.
+- [GLA-5] Prisma 7 scaffolded (`prisma/schema.prisma`, `prisma.config.ts`, `@prisma/adapter-pg` client singleton at `src/lib/prisma.ts`) — no models yet, no live database connection. `.env.example` documents `DATABASE_URL`/`DATABASE_SESSION_POOLER_URL` (Supabase transaction/session poolers) and `SUPABASE_URL`/`SUPABASE_ANON_KEY`/`SUPABASE_SERVICE_ROLE_KEY`.
+- [GLA-5] Health check moved into the `routes → controllers` layering and re-pathed to `GET /api/v1/health`, returning the `{ data }` response envelope.
 
 ### Changed
+
+- [GLA-5] Build output moved from `dist/index.js` to `dist/src/index.js` (`tsconfig.json`'s `rootDir` widened to the repo root so the generated Prisma client under `prisma/generated/` compiles alongside `src/`); `package.json`'s `main`/`start` updated to match.
+- [GLA-5] CI (`.github/workflows/ci.yaml`) runs `pnpm exec prisma generate` after install, before lint/typecheck/build — the generated client is gitignored and required for the type-aware lint/typecheck/build steps to resolve `src/lib/prisma.ts`'s import.
 
 ### Fixed
 

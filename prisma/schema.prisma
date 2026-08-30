@@ -1,0 +1,12 @@
+generator client {
+  provider = "prisma-client"
+  output   = "./generated"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// No models yet — this schema is scaffolding only (GLA-5). The first ticket
+// that persists data (e.g. the leads table) adds its model here and runs the
+// first migration against a real Supabase Postgres connection.

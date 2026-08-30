@@ -20,8 +20,10 @@ pnpm dev
 The server starts on the port set in `.env` (`PORT`, default `4000`). Confirm it's up:
 
 ```bash
-curl http://localhost:4000/health
+curl http://localhost:4000/api/v1/health
 ```
+
+Prisma is scaffolded but not connected to a live database yet (no models, no Supabase project) — `pnpm exec prisma generate` regenerates the client from `prisma/schema.prisma` into `prisma/generated/` without needing a real connection. See [CLAUDE.md](CLAUDE.md) → Stack → Database for the two-connection-string setup once a real Supabase project exists.
 
 ## Scripts
 
