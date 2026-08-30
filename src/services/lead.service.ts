@@ -4,8 +4,11 @@ import { LoanSchemeNotFoundError } from '../lib/errors/loan-scheme-not-found.err
 import { ValidationError } from '../lib/errors/validation.error';
 import type { LeadModel } from '../prisma/generated/models';
 import * as leadRepository from '../repositories/lead.repository';
-import type { CreateLeadInput } from '../schemas/lead.schema';
-import type { LeadWithPlan } from '../types/lead.types';
+import type {
+  CalculateLeadInput,
+  CreateLeadInput,
+} from '../schemas/lead.schema';
+import type { CalculateLeadResponse, LeadWithPlan } from '../types/lead.types';
 import {
   calculateMaxEligibleLoan,
   calculatePureGoldWeight,
@@ -18,6 +21,27 @@ const DEDUP_WINDOW_DAYS = 7;
 // READS
 export async function getLeads(): Promise<LeadWithPlan[]> {
   return leadRepository.getLeads();
+}
+
+export function calculateLead(
+  input: CalculateLeadInput,
+): CalculateLeadResponse {
+  ensureNetWeightNotExceedingGross(
+    input.netWeightGrams,
+    input.grossWeightGrams,
+  );
+
+  const pureGoldWeight = calculatePureGoldWeight(
+    input.netWeightGrams,
+    input.purityKarat,
+  );
+  const maxEligibleLoan = calculateMaxEligibleLoan(
+    pureGoldWeight,
+    GOLD_RATE_PER_GRAM,
+    MAX_LTV_RATIO,
+  );
+
+  return { pureGoldWeight, maxEligibleLoan };
 }
 
 // WRITES

@@ -1,6 +1,9 @@
 import type { Request, Response } from 'express';
 
-import type { CreateLeadInput } from '../schemas/lead.schema';
+import type {
+  CalculateLeadInput,
+  CreateLeadInput,
+} from '../schemas/lead.schema';
 import * as leadService from '../services/lead.service';
 import { maskMobileNumber } from '../services/lead.util';
 import type {
@@ -16,6 +19,12 @@ export async function getLeads(_req: Request, res: Response): Promise<void> {
 }
 
 // WRITES
+export function calculateLead(req: Request, res: Response): void {
+  const input = req.body as CalculateLeadInput;
+  const preview = leadService.calculateLead(input);
+  res.json({ data: preview });
+}
+
 export async function createLead(req: Request, res: Response): Promise<void> {
   const input = req.body as CreateLeadInput;
   const lead = await leadService.createLead(input);
