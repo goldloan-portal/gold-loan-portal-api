@@ -1,17 +1,24 @@
-import cors from 'cors'
-import 'dotenv/config'
-import express, { type Request, type Response } from 'express'
+import cors from 'cors';
+import 'dotenv/config';
+import express from 'express';
 
-const app = express()
-const port = process.env.PORT ?? 4000
+import { errorHandler } from './middlewares/error-handler.middleware';
+import healthRoutes from './routes/health.routes';
+import leadRoutes from './routes/lead.routes';
+import loanSchemeRoutes from './routes/loan-scheme.routes';
 
-app.use(cors())
-app.use(express.json())
+const app = express();
+const port = process.env.PORT ?? 4000;
 
-app.get('/health', (_req: Request, res: Response) => {
-  res.json({ status: 'ok' })
-})
+app.use(cors());
+app.use(express.json());
+
+app.use('/api/v1/health', healthRoutes);
+app.use('/api/v1/loan-schemes', loanSchemeRoutes);
+app.use('/api/v1/leads', leadRoutes);
+
+app.use(errorHandler);
 
 app.listen(port, () => {
-  console.log(`gold-loan-portal-api listening on port ${port}`)
-})
+  console.log(`gold-loan-portal-api listening on port ${port}`);
+});

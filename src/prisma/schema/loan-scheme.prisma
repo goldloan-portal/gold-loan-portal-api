@@ -1,0 +1,17 @@
+// =========================
+// LOAN SCHEME
+// =========================
+
+model LoanScheme {
+  id           String  @id @default(uuid()) @db.Uuid
+  name         String  @unique
+  interestRate Decimal @map("interest_rate") @db.Decimal(5, 2)
+  maxLtv       Decimal @map("max_ltv") @db.Decimal(5, 2)
+  isActive     Boolean @default(true) @map("is_active")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  leads Lead[]
+
+  @@map("loan_schemes")
+}
