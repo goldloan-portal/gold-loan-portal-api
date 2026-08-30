@@ -45,6 +45,10 @@ This API is the backend half of the Gold Loan Portal — the sibling [`gold-loan
 | `pnpm prettier:check`  | Check formatting without writing         |
 | `pnpm prettier:format` | Write formatting fixes                   |
 
+## Development Process
+
+This project was built ticket-by-ticket in Jira (project key `GLA`), following a lightweight Agile workflow: each unit of work is a Jira story/task with its own acceptance criteria, implemented on its own `feature/GLA-<n>-*` branch, and shipped through a dedicated PR back into `dev` — commit messages and CHANGELOG entries are tagged with their ticket number (`[GLA-<n>]`) so any change can be traced back to the ticket that drove it.
+
 ## Documentation
 
 - [PRODUCT.md](PRODUCT.md) — the assignment brief this project fulfills: domain formulas, required API surface, evaluation criteria.
