@@ -25,6 +25,14 @@ curl http://localhost:4000/api/v1/health
 
 Prisma is connected to a live Supabase Postgres project — `pnpm run prisma:generate` regenerates the client from the per-resource schema files under `src/prisma/schema/` into `src/prisma/generated/`, `pnpm run prisma:migrate` applies migrations, `pnpm run prisma:seed` runs `src/prisma/seed.ts`. See [CLAUDE.md](CLAUDE.md) → Stack → Database for the two-connection-string setup and schema conventions.
 
+## Running the Full Stack Locally
+
+This API is the backend half of the Gold Loan Portal — the sibling [`gold-loan-portal-frontend`](../gold-loan-portal-frontend) repo is its only consumer today.
+
+1. Start this API first: `pnpm dev` — defaults to `http://localhost:4000`. Confirm with `curl http://localhost:4000/api/v1/health`.
+2. Start the frontend (see its own `README.md` → Setup) with `VITE_API_BASE_URL` pointed at this API's URL (`http://localhost:4000` by default, already the default in the frontend's `.env.example`).
+3. CORS is currently unrestricted (see `CLAUDE.md` → Known Issues), so the frontend can call this API from any port without extra configuration.
+
 ## Scripts
 
 | Command                | What it does                             |
