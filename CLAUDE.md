@@ -6,31 +6,47 @@ Express 5 + TypeScript API for the Gold Loan Portal. This document is the refere
 
 - Express 5, TypeScript (`~6.0.2`), `tsx` for dev (watch mode), plain `tsc` build.
 - `cors`, `dotenv` — current runtime dependencies besides Express.
+- **Prisma 7** (PostgreSQL) — scaffolded, not yet connected to a live database. See below.
 - Package manager: **pnpm** (pinned via `packageManager` in `package.json`). Don't use `npm`/`yarn` in this repo.
 - Lint/format/hooks: ESLint (flat config), Prettier, Husky, lint-staged. See `.husky/*` and `CHANGELOG.md` for what's enforced.
+
+### Database: Prisma (scaffolded, not connected)
+
+Single schema file at `prisma/schema.prisma` — no models yet. Prisma 7's `prisma-client` generator emits TypeScript source (not a prebuilt package) to `prisma/generated/` (gitignored; regenerate via `pnpm exec prisma generate`). Because that generated source lives outside `src/`, `tsconfig.json`'s `rootDir` is the repo root and the compiled build lands at `dist/src/index.js` (not `dist/index.js`) — `package.json`'s `main`/`start` point there.
+
+Prisma 7 dropped the schema-embedded `datasource.url` — connection config lives in `prisma.config.ts` at the repo root instead, read only by the Prisma CLI (migrations, `prisma generate`'s config loading). The app's own runtime client is `src/lib/prisma.ts`, a `PrismaClient` built with the `@prisma/adapter-pg` driver adapter — the only place Prisma gets imported outside `repositories/` once one exists.
+
+**Two connection strings**, once a real Supabase project exists — Supabase's connection poolers don't all support the same operations:
+
+- `DATABASE_URL` — the app's own runtime queries (`src/lib/prisma.ts`'s adapter). Supabase's transaction pooler.
+- `DATABASE_SESSION_POOLER_URL` — migrations only (`prisma.config.ts`'s datasource). Supabase's session pooler — transaction pooling doesn't support the session-level operations `prisma migrate` needs.
+
+Conventions for when the first real model lands:
+
+- UUID primary keys (`@default(uuid()) @db.Uuid`).
+- Every table gets `createdAt @db.Timestamptz(6) @default(now())`; mutable tables also get `updatedAt @db.Timestamptz(6) @updatedAt`.
+- Money fields are `Decimal` with explicit precision/scale, never `Float`.
+- A field with a fixed set of values uses the Prisma-generated enum — it doesn't get redeclared in hand-written TypeScript.
+- Transactional/historical tables (loan records, repayments, audit trails) get a `deletedAt` soft delete; reference/master data (branches, gold rate tables, staff) gets an `isActive` toggle.
 
 ### Coming soon (not installed yet)
 
 Committed choices, not yet wired up. Add each in the ticket that actually needs it rather than ahead of time, and follow the convention below from that point on.
 
 - **Validation: Zod.** One schema file per resource (`schemas/<resource>.schema.ts`), one schema per route body/query/params. Infer types with `z.infer<typeof schema>` instead of hand-writing a parallel interface. Parse at the route boundary through a shared `validate(schema)` middleware — a controller or service should never see an unparsed `req.body`/`req.query`/`req.params`.
-- **Database: Prisma** (PostgreSQL). Single schema file at `prisma/schema.prisma` until it's big enough to need Prisma's multi-file split. Conventions for when it lands:
-  - UUID primary keys (`@default(uuid()) @db.Uuid`).
-  - Every table gets `createdAt @db.Timestamptz(6) @default(now())`; mutable tables also get `updatedAt @db.Timestamptz(6) @updatedAt`.
-  - Money fields are `Decimal` with explicit precision/scale, never `Float`.
-  - A field with a fixed set of values uses the Prisma-generated enum — it doesn't get redeclared in hand-written TypeScript.
-  - Transactional/historical tables (loan records, repayments, audit trails) get a `deletedAt` soft delete; reference/master data (branches, gold rate tables, staff) gets an `isActive` toggle.
-  - The Prisma client is only ever imported inside `repositories/`.
+- **Supabase Auth client** (`@supabase/supabase-js`) — for the admin/partner view, if that ends up needing its own auth. No admin/partner auth ticket exists yet.
 
 ## Folder Structure
 
-Right now everything lives in `src/index.ts` (bootstrap only — no routes yet). Once the first real resource lands, the API is organized in layers, one folder per kind:
+`routes/`, `controllers/`, and `lib/` hold real content now (the health check, the Prisma client singleton). The remaining layers land once the first real resource needs them:
 
 ```
 src/
   routes/
+    health.routes.ts           # done
     <resource>.routes.ts       # Express Router; wires an HTTP path + method to a controller function
   controllers/
+    health.controller.ts       # done
     <resource>.controller.ts   # reads the (already-validated) request, calls the service, shapes the response
   services/
     <resource>.service.ts      # business logic and orchestration, calls repositories
@@ -39,10 +55,15 @@ src/
   schemas/
     <resource>.schema.ts       # Zod schemas for this resource's request bodies/params/query
   middlewares/                 # validate(), the error handler, auth (once added)
-  lib/                         # prisma client singleton, other shared clients
+  lib/
+    prisma.ts                  # done — Prisma client singleton (PrismaPg adapter), unused until a repository imports it
   config/                      # env parsing/validation
   types/                       # shared TS types not owned by a single resource
   index.ts                     # app bootstrap: middleware wiring, route mounting, listen
+
+prisma/
+  schema.prisma                 # single schema file, no models yet
+  generated/                    # gitignored — regenerate via `pnpm exec prisma generate`
 ```
 
 A request flows one way: `routes → controllers → services → repositories → Prisma`. Don't skip a layer — a controller doesn't reach into a repository directly, a route doesn't hold logic.
@@ -83,6 +104,7 @@ Granular, enforced conventions live in `.claude/instructions/*.md` — treat the
 
 - `.env` for local values (gitignored), `.env.example` kept in sync with every key `.env` defines (no real values in the example file).
 - Once config grows past `PORT`, read it through a single validated accessor rather than scattering `process.env.X` reads across the codebase.
+- `DATABASE_URL`, `DATABASE_SESSION_POOLER_URL`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` are documented in `.env.example` but unset — no live Supabase project yet (see Stack → Database).
 
 ## Git, Commits & Releases
 
@@ -119,7 +141,7 @@ Only log prompts that produced a change which actually merged. A ticket revisite
 
 ## Known Issues / Notes
 
-- No database yet — no Prisma schema, no persistence. Whatever ticket first needs to read or write data adds this.
-- No authentication/authorization yet.
+- Prisma is scaffolded (schema, client, generated output) but not connected to a live database — no models, no migrations, no real Supabase project. Whatever ticket first needs to read or write data adds the first model and a real connection.
+- No authentication/authorization yet — a Supabase Auth client is documented as coming soon (see Stack), not installed.
 - No test framework in this repo yet (the frontend has Vitest; this one doesn't). Add one when a ticket first needs test coverage.
 - No structured logging yet — plain `console` until request volume or debugging need justifies more.
