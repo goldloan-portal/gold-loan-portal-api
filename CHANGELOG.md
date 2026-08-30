@@ -16,6 +16,11 @@ Each entry references the Jira ticket (`GLA-XXX`) that introduced the change.
 ### Added
 
 - [GLA-2] Husky pre-commit/commit-msg/pre-push hooks, lint-staged, ESLint, and Prettier set up to enforce code quality and conventional, ticket-tagged commit messages.
+- [GLA-3] `CLAUDE.md` documenting stack, folder structure, error handling, response shape, git/PR conventions, and AI prompt-logging conventions.
+- [GLA-3] `.claude/skills/commit-gla` and `.claude/skills/pr-gla` — husky-compliant conventional commit and PR-creation automation. `.claude/commands/validate.md` (lint/typecheck/build/prettier pipeline) and `.claude/commands/release.md` (dev → main release across both repos).
+- [GLA-3] `.claude/commands/test-branch.md` — inline curl HTTP QA runner for the current feature branch, diff-aware, no script files.
+- [GLA-3] `.claude/instructions/` — enforced conventions for code organization, Zod validation, custom errors, response shape, update/PATCH guards, and date/time handling, referenced from `CLAUDE.md`.
+- [GLA-3] `docs/adr/` — Nygard-template ADR scaffolding (`README.md` index + `0000-template.md`).
 
 ### Changed
 
