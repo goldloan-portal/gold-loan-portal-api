@@ -15,6 +15,16 @@ Each entry references the Jira ticket (`GLA-XXX`) that introduced the change.
 
 ### Added
 
+### Changed
+
+### Fixed
+
+### Removed
+
+## [0.2.0] - 2026-08-30
+
+### Added
+
 - [GLA-2] Husky pre-commit/commit-msg/pre-push hooks, lint-staged, ESLint, and Prettier set up to enforce code quality and conventional, ticket-tagged commit messages.
 - [GLA-3] `CLAUDE.md` documenting stack, folder structure, error handling, response shape, git/PR conventions, and AI prompt-logging conventions.
 - [GLA-3] `.claude/skills/commit-gla` and `.claude/skills/pr-gla` — husky-compliant conventional commit and PR-creation automation. `.claude/commands/validate.md` (lint/typecheck/build/prettier pipeline) and `.claude/commands/release.md` (dev → main release across both repos).
@@ -37,7 +47,3 @@ Each entry references the Jira ticket (`GLA-XXX`) that introduced the change.
 - [GLA-5] Build output moved from `dist/index.js` to `dist/src/index.js` (`tsconfig.json`'s `rootDir` widened to the repo root so the generated Prisma client under `prisma/generated/` compiles alongside `src/`); `package.json`'s `main`/`start` updated to match.
 - [GLA-5] CI (`.github/workflows/ci.yaml`) runs `pnpm exec prisma generate` after install, before lint/typecheck/build — the generated client is gitignored and required for the type-aware lint/typecheck/build steps to resolve `src/lib/prisma.ts`'s import.
 - [GLA-9] Prisma relocated from the repo root (`prisma/`) to `src/prisma/`, matching the reference production repo's layout: schema split per resource under `src/prisma/schema/` (`main.prisma` for generator/datasource, one `<resource>.prisma` file per model), migrations nested at `src/prisma/schema/migrations/`, generated client at `src/prisma/generated/`, seed script at `src/prisma/seed.ts`. `prisma.config.ts`, `.gitignore`, `tsconfig.json`'s `include`, and `src/lib/prisma.ts`'s import path updated to match; `rootDir` stays at the repo root regardless, since `prisma.config.ts` itself must remain there.
-
-### Fixed
-
-### Removed
