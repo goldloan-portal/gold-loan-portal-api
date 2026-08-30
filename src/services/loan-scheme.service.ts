@@ -5,3 +5,9 @@ import * as loanSchemeRepository from '../repositories/loan-scheme.repository';
 export async function getLoanSchemes(): Promise<LoanSchemeModel[]> {
   return loanSchemeRepository.getLoanSchemes();
 }
+
+export async function getLoanSchemeById(
+  id: string,
+): Promise<LoanSchemeModel | null> {
+  return loanSchemeRepository.getLoanSchemeById(id);
+}

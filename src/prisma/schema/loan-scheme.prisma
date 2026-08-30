@@ -11,5 +11,7 @@ model LoanScheme {
 
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
+  leads Lead[]
+
   @@map("loan_schemes")
 }

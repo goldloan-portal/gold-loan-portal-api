@@ -1,0 +1,34 @@
+// =========================
+// LEAD
+// =========================
+
+enum GoldPurity {
+  K18
+  K22
+  K24
+}
+
+enum LeadStatus {
+  SUBMITTED
+}
+
+model Lead {
+  id               String     @id @default(uuid()) @db.Uuid
+  customerName     String     @map("customer_name")
+  mobileNumber     String     @map("mobile_number")
+  grossWeightGrams Decimal    @map("gross_weight_grams") @db.Decimal(10, 3)
+  netWeightGrams   Decimal    @map("net_weight_grams") @db.Decimal(10, 3)
+  purityKarat      GoldPurity @map("purity_karat")
+  pureGoldWeight   Decimal    @map("pure_gold_weight") @db.Decimal(10, 3)
+  maxEligibleLoan  Decimal    @map("max_eligible_loan") @db.Decimal(14, 2)
+  status           LeadStatus @default(SUBMITTED)
+
+  selectedPlanId String     @map("selected_plan_id") @db.Uuid
+  selectedPlan   LoanScheme @relation(fields: [selectedPlanId], references: [id])
+
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  @@index([mobileNumber, createdAt])
+  @@map("leads")
+}

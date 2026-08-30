@@ -4,6 +4,7 @@ import express from 'express';
 
 import { errorHandler } from './middlewares/error-handler.middleware';
 import healthRoutes from './routes/health.routes';
+import leadRoutes from './routes/lead.routes';
 import loanSchemeRoutes from './routes/loan-scheme.routes';
 
 const app = express();
@@ -14,6 +15,7 @@ app.use(express.json());
 
 app.use('/api/v1/health', healthRoutes);
 app.use('/api/v1/loan-schemes', loanSchemeRoutes);
+app.use('/api/v1/leads', leadRoutes);
 
 app.use(errorHandler);
 
