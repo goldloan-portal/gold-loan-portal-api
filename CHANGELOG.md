@@ -25,11 +25,13 @@ Each entry references the Jira ticket (`GLA-XXX`) that introduced the change.
 - [GLA-4] `README.md` with setup instructions, script table, and a CI status badge.
 - [GLA-5] Prisma 7 scaffolded (`prisma/schema.prisma`, `prisma.config.ts`, `@prisma/adapter-pg` client singleton at `src/lib/prisma.ts`) — no models yet, no live database connection. `.env.example` documents `DATABASE_URL`/`DATABASE_SESSION_POOLER_URL` (Supabase transaction/session poolers) and `SUPABASE_URL`/`SUPABASE_ANON_KEY`/`SUPABASE_SERVICE_ROLE_KEY`.
 - [GLA-5] Health check moved into the `routes → controllers` layering and re-pathed to `GET /api/v1/health`, returning the `{ data }` response envelope.
+- [GLA-9] `LoanScheme` Prisma model (`id`, `name`, `interestRate`, `maxLtv`, `isActive`, `createdAt`) and its first migration, applied to a live Supabase Postgres project. Seed script (`src/prisma/seed.ts`, `pnpm run prisma:seed`) seeds two plans — Bullet Repayment Plan and Monthly EMI Plan — idempotently via `upsert` keyed on `name`.
 
 ### Changed
 
 - [GLA-5] Build output moved from `dist/index.js` to `dist/src/index.js` (`tsconfig.json`'s `rootDir` widened to the repo root so the generated Prisma client under `prisma/generated/` compiles alongside `src/`); `package.json`'s `main`/`start` updated to match.
 - [GLA-5] CI (`.github/workflows/ci.yaml`) runs `pnpm exec prisma generate` after install, before lint/typecheck/build — the generated client is gitignored and required for the type-aware lint/typecheck/build steps to resolve `src/lib/prisma.ts`'s import.
+- [GLA-9] Prisma relocated from the repo root (`prisma/`) to `src/prisma/`, matching the reference production repo's layout: schema split per resource under `src/prisma/schema/` (`main.prisma` for generator/datasource, one `<resource>.prisma` file per model), migrations nested at `src/prisma/schema/migrations/`, generated client at `src/prisma/generated/`, seed script at `src/prisma/seed.ts`. `prisma.config.ts`, `.gitignore`, `tsconfig.json`'s `include`, and `src/lib/prisma.ts`'s import path updated to match; `rootDir` stays at the repo root regardless, since `prisma.config.ts` itself must remain there.
 
 ### Fixed
 

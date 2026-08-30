@@ -12,7 +12,11 @@
     "lint": "eslint . --fix",
     "prettier:check": "prettier --check \"**/*.{js,ts,json,md}\"",
     "prettier:format": "prettier --write \"**/*.{js,ts,json,md}\"",
-    "prepare": "husky"
+    "prepare": "husky",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:seed": "prisma db seed",
+    "prisma:studio": "prisma studio"
   },
   "keywords": [],
   "author": "",

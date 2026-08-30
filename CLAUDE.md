@@ -6,28 +6,33 @@ Express 5 + TypeScript API for the Gold Loan Portal. This document is the refere
 
 - Express 5, TypeScript (`~6.0.2`), `tsx` for dev (watch mode), plain `tsc` build.
 - `cors`, `dotenv` — current runtime dependencies besides Express.
-- **Prisma 7** (PostgreSQL) — scaffolded, not yet connected to a live database. See below.
+- **Prisma 7** (PostgreSQL) — connected to a live Supabase project. See below.
 - Package manager: **pnpm** (pinned via `packageManager` in `package.json`). Don't use `npm`/`yarn` in this repo.
 - Lint/format/hooks: ESLint (flat config), Prettier, Husky, lint-staged. See `.husky/*` and `CHANGELOG.md` for what's enforced.
 
-### Database: Prisma (scaffolded, not connected)
+### Database: Prisma (connected — Supabase Postgres)
 
-Single schema file at `prisma/schema.prisma` — no models yet. Prisma 7's `prisma-client` generator emits TypeScript source (not a prebuilt package) to `prisma/generated/` (gitignored; regenerate via `pnpm exec prisma generate`). Because that generated source lives outside `src/`, `tsconfig.json`'s `rootDir` is the repo root and the compiled build lands at `dist/src/index.js` (not `dist/index.js`) — `package.json`'s `main`/`start` point there.
+Prisma lives under `src/prisma/`, not at the repo root — schema, migrations, generated client, and the seed script are all colocated there (mirrors the reference production repo's layout). Schema is **split per resource** under `src/prisma/schema/` — `main.prisma` holds only the `generator`/`datasource` blocks, every resource gets its own `<resource>.prisma` file (e.g. `loan-scheme.prisma`). `prisma.config.ts`'s `schema` points at that directory, not a single file; Prisma merges every `.prisma` file under it. Migrations live nested inside it, at `src/prisma/schema/migrations/`. Prisma 7's `prisma-client` generator emits TypeScript source (not a prebuilt package) to `src/prisma/generated/` (gitignored; regenerate via `pnpm exec prisma generate` or `pnpm run prisma:generate`) — a sibling of `schema/`, not nested inside it, so `main.prisma`'s `generator.output` is `../generated`.
 
-Prisma 7 dropped the schema-embedded `datasource.url` — connection config lives in `prisma.config.ts` at the repo root instead, read only by the Prisma CLI (migrations, `prisma generate`'s config loading). The app's own runtime client is `src/lib/prisma.ts`, a `PrismaClient` built with the `@prisma/adapter-pg` driver adapter — the only place Prisma gets imported outside `repositories/` once one exists.
+`tsconfig.json`'s `rootDir` is still the repo root and the compiled build still lands at `dist/src/index.js` (not `dist/index.js`) — not because of where the generated Prisma output lives (that's inside `src/` now), but because `prisma.config.ts` itself must stay at the repo root (Prisma 7's CLI convention) and is also typechecked as part of `tsc`.
 
-**Two connection strings**, once a real Supabase project exists — Supabase's connection poolers don't all support the same operations:
+Prisma 7 dropped the schema-embedded `datasource.url` — connection config lives in `prisma.config.ts` at the repo root instead, read only by the Prisma CLI (migrations, `prisma generate`'s config loading, `prisma db seed`). The app's own runtime client is `src/lib/prisma.ts`, a `PrismaClient` built with the `@prisma/adapter-pg` driver adapter — the only place Prisma gets imported outside `repositories/` once one exists.
+
+**Two connection strings** — Supabase's connection poolers don't all support the same operations:
 
 - `DATABASE_URL` — the app's own runtime queries (`src/lib/prisma.ts`'s adapter). Supabase's transaction pooler.
-- `DATABASE_SESSION_POOLER_URL` — migrations only (`prisma.config.ts`'s datasource). Supabase's session pooler — transaction pooling doesn't support the session-level operations `prisma migrate` needs.
+- `DATABASE_SESSION_POOLER_URL` — migrations and seeding (`prisma.config.ts`'s datasource; `src/prisma/seed.ts` connects with it directly too). Supabase's session pooler — transaction pooling doesn't support the session-level operations `prisma migrate`/`prisma db seed` need.
 
-Conventions for when the first real model lands:
+**Seeding**: `prisma.config.ts`'s `migrations.seed` wires `tsx src/prisma/seed.ts` into `prisma db seed` (also `pnpm run prisma:seed`) — Prisma 7's config-based seed hook, run automatically at the end of `prisma migrate dev` or standalone. `src/prisma/seed.ts` opens its own `PrismaPg` adapter against `DATABASE_SESSION_POOLER_URL` (independent of `src/lib/prisma.ts`'s runtime client) and `upsert`s each row keyed by a unique business field (e.g. `LoanScheme.name`) so re-running the script is a no-op on unchanged rows.
+
+Conventions, established with the first real model (`LoanScheme`, GLA-9):
 
 - UUID primary keys (`@default(uuid()) @db.Uuid`).
+- snake_case columns via `@map`, snake_case tables via `@@map`.
 - Every table gets `createdAt @db.Timestamptz(6) @default(now())`; mutable tables also get `updatedAt @db.Timestamptz(6) @updatedAt`.
 - Money fields are `Decimal` with explicit precision/scale, never `Float`.
 - A field with a fixed set of values uses the Prisma-generated enum — it doesn't get redeclared in hand-written TypeScript.
-- Transactional/historical tables (loan records, repayments, audit trails) get a `deletedAt` soft delete; reference/master data (branches, gold rate tables, staff) gets an `isActive` toggle.
+- Transactional/historical tables (loan records, repayments, audit trails) get a `deletedAt` soft delete; reference/master data (branches, gold rate tables, staff, loan schemes) gets an `isActive` toggle.
 
 ### Coming soon (not installed yet)
 
@@ -38,7 +43,7 @@ Committed choices, not yet wired up. Add each in the ticket that actually needs 
 
 ## Folder Structure
 
-`routes/`, `controllers/`, and `lib/` hold real content now (the health check, the Prisma client singleton). The remaining layers land once the first real resource needs them:
+`routes/`, `controllers/`, `lib/`, and `prisma/` hold real content now (the health check, the Prisma client singleton, the `LoanScheme` model). The remaining layers land once the first real resource needs them:
 
 ```
 src/
@@ -57,13 +62,16 @@ src/
   middlewares/                 # validate(), the error handler, auth (once added)
   lib/
     prisma.ts                  # done — Prisma client singleton (PrismaPg adapter), unused until a repository imports it
+  prisma/
+    schema/
+      main.prisma               # generator + datasource only
+      <resource>.prisma         # one file per resource, e.g. loan-scheme.prisma
+      migrations/                # prisma migrate dev output
+    generated/                  # gitignored — regenerate via `pnpm exec prisma generate`
+    seed.ts                     # `prisma db seed` entrypoint, upserts idempotent seed rows
   config/                      # env parsing/validation
   types/                       # shared TS types not owned by a single resource
   index.ts                     # app bootstrap: middleware wiring, route mounting, listen
-
-prisma/
-  schema.prisma                 # single schema file, no models yet
-  generated/                    # gitignored — regenerate via `pnpm exec prisma generate`
 ```
 
 A request flows one way: `routes → controllers → services → repositories → Prisma`. Don't skip a layer — a controller doesn't reach into a repository directly, a route doesn't hold logic.
@@ -104,7 +112,7 @@ Granular, enforced conventions live in `.claude/instructions/*.md` — treat the
 
 - `.env` for local values (gitignored), `.env.example` kept in sync with every key `.env` defines (no real values in the example file).
 - Once config grows past `PORT`, read it through a single validated accessor rather than scattering `process.env.X` reads across the codebase.
-- `DATABASE_URL`, `DATABASE_SESSION_POOLER_URL`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` are documented in `.env.example` but unset — no live Supabase project yet (see Stack → Database).
+- `DATABASE_URL`, `DATABASE_SESSION_POOLER_URL` are live (a real Supabase Postgres project — see Stack → Database). `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` are documented in `.env.example` but unset — no Supabase Auth client installed yet (see Stack → Coming soon).
 
 ## Git, Commits & Releases
 
@@ -141,7 +149,7 @@ Only log prompts that produced a change which actually merged. A ticket revisite
 
 ## Known Issues / Notes
 
-- Prisma is scaffolded (schema, client, generated output) but not connected to a live database — no models, no migrations, no real Supabase project. Whatever ticket first needs to read or write data adds the first model and a real connection.
+- Prisma is connected to a live Supabase Postgres project; `LoanScheme` (GLA-9) is the only model so far, with one migration and a seed script (`pnpm run prisma:seed`) that seeds two plans (Bullet Repayment, Monthly EMI). No repository/service/controller reads it yet — that's a separate ticket.
 - No authentication/authorization yet — a Supabase Auth client is documented as coming soon (see Stack), not installed.
 - No test framework in this repo yet (the frontend has Vitest; this one doesn't). Add one when a ticket first needs test coverage.
 - No structured logging yet — plain `console` until request volume or debugging need justifies more.
